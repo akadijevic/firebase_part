@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonSignOut;
 
     @Override
+    //Oncreate method basically builds the entire application and the content with which the user is presented with
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -50,109 +51,126 @@ public class MainActivity extends AppCompatActivity {
         buttonCreateLogin = (Button) findViewById(R.id.buttonCreateLogin);
         buttonSignOut = (Button) findViewById(R.id.buttonSignOut);
 
+        // When button Login is Clicked the app receives that input that user entered. Then it calls a SignIn method.
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "normal login ");
+                //Log.d("CIS3334", "normal login ");
                 signIn(editTextEmail.getText().toString(), editTextPassword.getText().toString());
             }
         });
-
+        // When button Create is Clicked the app receives that input that user entered. The createAccount method is called.
         buttonCreateLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Create Account ");
+               // Log.d("CIS3334", "Create Account ");
                 createAccount(editTextEmail.getText().toString(), editTextPassword.getText().toString());
             }
         });
-
+        // When button Goggle Login the method googleSignIn is called.
         buttonGoogleLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Google login ");
+                //Log.d("CIS3334", "Google login ");
                 googleSignIn();
             }
         });
 
+        //When button Sign out is Clicked the app calls the SignOut method
         buttonSignOut.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d("CIS3334", "Logging out - signOut ");
+                //Log.d("CIS3334", "Logging out - signOut ");
                 signOut();
             }
         });
 
-        mAuth = FirebaseAuth.getInstance();
+        mAuth = FirebaseAuth.getInstance(); //FirebaseAuth Instance initialized
+        mAuthListener = new FirebaseAuth.AuthStateListener() {  //FirebaseAuth Listener initialized
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
+
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+                FirebaseUser user = firebaseAuth.getCurrentUser(); //creates firebase object that checks the status of the user
+                //the if statement checks whether the user is signed in or signed out
+                //If it returns not null, the user is signed it, if the it return null then there is no user signed in
                 if (user != null) {
                     // User is signed in
-                    Log.d("cis3334", "onAuthStateChanged:signed_in:" + user.getUid());
+                    //Log.d("cis3334", "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
                     // User is signed out
-                    Log.d("cis3334", "onAuthStateChanged:signed_out");
+                    //Log.d("cis3334", "onAuthStateChanged:signed_out");
                 }
                 // ...
             }
         };
     }
     @Override
+    //when user signed in
     public void onStart() {
         super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
+        mAuth.addAuthStateListener(mAuthListener); //adds authorization using FirebaseAuth.AuthStateListener for the specific instance.
     }
 
     @Override
+    //when user signed out
     public void onStop() {
         super.onStop();
         if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
+            mAuth.removeAuthStateListener(mAuthListener); //removes authorization using FirebaseAuth.AuthStateListener for the specific instance.
         }
     }
 
-
+    //method called when a new login is being created
     private void createAccount(String email, String password) {
-        mAuth.createUserWithEmailAndPassword(email, password)
+        mAuth.createUserWithEmailAndPassword(email, password) //the FirebaseAuth object calls method to create new login, passing the parameters.
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d("cis3334", "createUserWithEmail:onComplete:" + task.isSuccessful());
+                        // Log.d("cis3334", "createUserWithEmail:onComplete:" + task.isSuccessful());
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
+                        //if the task fails, textviewStatus updates
                         if (!task.isSuccessful()) {
-                            Toast.makeText(MainActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                            textViewStatus.setText("Status: Authentication failed.");
 
-                        // ...
+                            //Toast.makeText(MainActivity.this, "Authentication failed.",
+                            //Toast.LENGTH_SHORT).show();
+
+                            //if the task succeeded, textviewStatus updates and new credentials have been created successfully
+                        } else {
+                            // ...
+                            textViewStatus.setText("Status: Successfully Created User.");
+
+                        }
                     }
                 });
     }
 
+    //method called when the user clicked the Login button
     private void signIn(String email, String password){
-        mAuth.signInWithEmailAndPassword(email, password)
+        mAuth.signInWithEmailAndPassword(email, password) //the FirebaseAuth object calls method to retrieve existing credentials with passing the input user entered as parameters
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d("cis3334", "signInWithEmail:onComplete:" + task.isSuccessful());
+                        //Log.d("cis3334", "signInWithEmail:onComplete:" + task.isSuccessful());
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
+                        //if the task fails, textviewStatus updates
                         if (!task.isSuccessful()) {
-                            Log.w("cis3334", "signInWithEmail", task.getException());
-                            Toast.makeText(MainActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                            textViewStatus.setText("Status: Authentication failed.");
+                            // / Log.w("cis3334", "signInWithEmail", task.getException());
+                            //Toast.makeText(MainActivity.this, "Authentication failed.",
+                            //Toast.LENGTH_SHORT).show();
 
+                            //if the task succeeded, textviewStatus updates and new user has been logged in successfully
+                        } else {
+                            textViewStatus.setText("Status: User Signed in.");
+                        }
                         // ...
                     }
+
                 });
     }
 
     private void signOut () {
-        mAuth.signOut();
+        mAuth.signOut(); //FirebaseAuth object calls the sign out method
+        textViewStatus.setText("Status: Successfully Signed out."); //updated textViewStatus
+
     }
 
     private void googleSignIn() {
